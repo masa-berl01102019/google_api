@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>google chart</title>
+</head>
+<body>
+  <div id="pieChart"></div>
+  <div class='usingSameData' style='display: flex'>
+    <div id="barChart"></div>
+    <div id="columnChart"></div>
+  </div>
+  <div id="lineChart"></div>
+  <div id="drawChart"></div>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <!-- google chart のライブラリの読み込み -->
+  <!-- 参考URL: https://developers.google.com/chart/ -> chart gallery で作れるグラフを選べる-->
+  <script>
+    (function(){
+      'use strict';
+
+      google.charts.load( 'current', {packages:['corechart']} );
+      // 上記でgoogle chart のversionを指定して読み込み出来る * current で最新版を読み込める
+      // 第二引数でpackageを指定出来る * 基本的なチャートが入ってる corechart を指定
+
+      google.charts.setOnLoadCallback(drawPieChart);
+      // 上記のsetOnLoadCallback() に関数を渡すことでライブラリの読み込みと設定完了したら引数で渡した関数を呼び出してくれる
+
+      google.charts.setOnLoadCallback(drawMultipleChart);
+      // 一つのコールバック関数で２つのグラフを描画するパターン * 同一のデータに対して異なるグラフを描画するのにいい
+
+      google.charts.setOnLoadCallback(drawLineChart);
+
+      google.charts.setOnLoadCallback(drawChart);
+      // spread sheatと連動させて描画するパターン
+
+      function drawPieChart () {
+        let pieChart = document.getElementById('pieChart');
+        // 描画領域を取得
+        let data;
+        // dataを格納する変数の宣言
+        let options = {
+          title: 'Pie Chart',
+          width: 500,
+          height: 300,
+          backgorundColor: '#f8f8f8', // 背景色を設定
+          colors: ['green', 'blue', 'red'], // 行データの配列順( 0~ ) から順に指定出来る
+          slices: [1, {offset: 0.2}], // 一部の行データをグラフから切り出して目立たせる * [配列の順番, {offset: 0~1}] * offset:0.2 は円グラフの半径20％と切り出す距離の指定
+          // pieHole: 0.4, // ドーナッツ型の円グラフも指定出来る * 0.4は円グラフの半径40％分を真ん中に穴をあけるという指定
+          is3D: true, // 立体的な円グラフの作成が可能 *pieHoleとは一緒に使えないので注意
+        };
+        // 描画の為のoptionをobject形式で指定
+        let chart = new google.visualization.PieChart(pieChart);
+        // 描画するグラフを上記のように指定して描画領域の要素を引数として渡してインスタンスを作成
+
+        data = new google.visualization.DataTable();
+        // 事前に宣言したdataに空のデータテーブルのインスタンスを作成して代入
+        data.addColumn('string', 'Language');
+        data.addColumn('number', 'Votes');
+        // 上記のようにaddColumn('データ型', '列の名前')で指定して列を作成
+        data.addRow(['PHP', 100]);
+        data.addRow(['Ruby', 20]);
+        data.addRow(['Python', 10]);
+        // 上記で指定した列に対応する形でaddRow()で行dataを配列の形で追加する
+
+        chart.draw(data,options);
+        // 作成したグラフのインスタンスのdrawメソッドにグラフ作成に必要なデータと描画のオプションを引数で渡して描画
+      }
+
+      function drawMultipleChart () {
+        let barChart = document.getElementById('barChart');
+        let columnChart = document.getElementById('columnChart');
+        // 上記のように2つの領域を確保
+
+        let data = new google.visualization.arrayToDataTable([
+          ['Team', 'Item-1', 'Item-2'], // 見出し行の追加
+          ['Team A', 12, 38], // 各行データの追加 * dataの型はデータから推測してくれる
+          ['Team B', 42, 18],
+          ['Team C', 11, 58]
+        ]);
+        // 上記のようにarrayToDataTable()で配列で一気にテーブルにデータをセットすることが出来る
+
+        let bar_options = {
+          title: 'Bar Chart',
+          width: 500,
+          height: 300,
+          animation: {
+            startup: true, // animationを使う時はstartup: trueを指定
+            duration: 800, // duration はミリ秒で指定
+            easing: 'inAndOut' // easingも設定出来る
+          },
+          // isStacked: true, // 積み上げのグラフにしてくれる
+          isStacked: 'percent', // percentで100％中の何％かをグラフ化することが出来る
+        }
+        let chart_bar = new google.visualization.BarChart(barChart); // 横棒グラフ
+        chart_bar.draw(data, bar_options);
+
+        let column_options = {
+          title: 'Column Chart',
+          width: 500,
+          height: 300,
+          animation: {
+            startup: true, // animationを使う時はstartup: trueを指定
+            duration: 800, // duration はミリ秒で指定
+            easing: 'inAndOut' // easingも設定出来る
+          },
+        }
+        let chart_column = new google.visualization.ColumnChart(columnChart); // 縦棒グラフ
+        chart_column.draw(data, column_options);
+      }
+
+      function drawLineChart () {
+        let lineChart = document.getElementById('lineChart');
+        let data = new google.visualization.arrayToDataTable([
+          ['Year', '@taguchi', {role:'annotation'}, {role:'certainty'}, '@fkoji', {role:'certainty'}],
+          // object形式で{role: '何らかのvalue'}でグラフのデータに情報を付与出来る *roleの値には複数種類がある
+          // {role:'annotation'} でデータポイントにコメントを付与出来る
+          // {role:'certainty'} で折れ線を破線と実践
+          ['2014', 52, 'Campaign A', true, 89, true], // 見出し行に対応する形で入れたいコメントを文字列で渡してあげればいい
+          ['2015', 38, null, true, 78, true], // コメントを入れたくない場合はnullを渡せばいい
+          ['2016', 44, null, true, 88, true], // trueで実践
+          ['2017', 62, null, false, 91, false] // falseで破線
+        ]);
+        let options = {
+          title: 'Line Chart',
+          width: 500,
+          height: 300,
+          hAxis: {title: 'Year'}, // 縦軸につけるラベルの設定
+          vAxis: {title: 'Sales'}, // 横軸につけるラベルの設定
+          curveType: 'function', // 緩やかなカーブのグラフに出来る
+          pointSize: 10, // data pointのサイズを指定出来る
+          pointShape: 'square', // data pointの形を指定出来る
+        }
+        let chart = new google.visualization.LineChart(lineChart);
+        chart.draw(data, options);
+      }
+
+      function drawChart () {
+        let query = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1Ud-qnZa_B82HA2G92eWccJC7JGNhZm2KosJVOtoaJRs/edit?usp=sharing');
+        // 上記のインスタンス作成時にスプレッドシートのURLを引数に渡してデータを取得
+        query.send(handleQueryResponse);
+        // 作成したインスタンスのsendメソッドの引数に関数を渡して描画の処理を書く
+
+        function handleQueryResponse (response) { // spread sheatに入ったデータは引数で受け取れる
+          let drawChart = document.getElementById('drawChart');
+          let data;
+          let options = {
+            title: 'My Chart',
+            width: 500,
+            height: 300,
+          };
+          let chart = new google.visualization.PieChart(drawChart);
+          data = response.getDataTable(); // 引数に対してgetDataTable()でdataに代入する
+          chart.draw(data, options);
+        }
+      }
+
+    })();
+  </script>
+</body>
+</html>
